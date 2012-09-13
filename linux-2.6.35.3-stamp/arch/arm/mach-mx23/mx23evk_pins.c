@@ -406,7 +406,7 @@ void mxs_mmc_cmd_pullup_mmc0(int enable)
 }
 #endif
 
-#if defined(CONFIG_ENC28J60) || defined(CONFIG_ENC28J60_MODULE)
+/*#if defined(CONFIG_ENC28J60) || defined(CONFIG_ENC28J60_MODULE)
 int mxs_spi_enc_pin_init(void)
 {
 	unsigned gpio = MXS_PIN_TO_GPIO(PINID_SSP1_DATA1);
@@ -431,7 +431,47 @@ int mxs_spi_enc_pin_release(void)
 	gpio_free(gpio);
 	set_irq_type(gpio_to_irq(gpio), IRQ_TYPE_NONE);
 
-	/* release the pins */
+	//release the pins 
+	mxs_release_pins(mx23evk_spi_pins, ARRAY_SIZE(mx23evk_spi_pins));
+
+	return 0;
+}
+#else
+int mxs_spi_enc_pin_init(void)
+{
+	return 0;
+}
+int mxs_spi_enc_pin_release(void)
+{
+	return 0;
+}
+#endif*/
+
+
+#if defined(CONFIG_TOUCHSCREEN_ADS7846)
+int mxs_spi_enc_pin_init(void)
+{
+	//unsigned gpio = MXS_PIN_TO_GPIO(PINID_SSP1_DATA1);
+	//unsigned enc_rst = MXS_PIN_TO_GPIO(PINID_SSP1_DETECT);
+
+	//gpio_request(enc_rst, "enc_reset");
+	//gpio_direction_output(enc_rst, 1);
+
+	mxs_request_pins(mx23evk_spi_pins, ARRAY_SIZE(mx23evk_spi_pins));
+
+	//gpio_request(gpio, "ENC28J60_INTR");
+	//gpio_direction_input(gpio);
+	//set_irq_type(gpio_to_irq(gpio), IRQ_TYPE_EDGE_FALLING);
+
+	return 0;
+}
+int mxs_spi_enc_pin_release(void)
+{
+	unsigned gpio = MXS_PIN_TO_GPIO(PINID_SSP1_DATA1);
+	gpio_free(gpio);
+	set_irq_type(gpio_to_irq(gpio), IRQ_TYPE_NONE);
+
+	//release the pins 
 	mxs_release_pins(mx23evk_spi_pins, ARRAY_SIZE(mx23evk_spi_pins));
 
 	return 0;
@@ -446,6 +486,10 @@ int mxs_spi_enc_pin_release(void)
 	return 0;
 }
 #endif
+
+
+
+
 
 #if defined(CONFIG_FEC) || defined(CONFIG_FEC_MODULE)
 int mx23evk_enet_gpio_init(void)

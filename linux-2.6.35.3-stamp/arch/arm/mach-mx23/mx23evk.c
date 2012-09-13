@@ -24,6 +24,10 @@
 #include <linux/i2c.h>
 #include <linux/i2c/at24.h>
 #include <linux/spi/spi.h>
+//#include <linux/spi/spi_gpio.h>
+#include <linux/spi/ads7846.h>
+#include <linux/regulator/machine.h>
+#include <linux/regulator/fixed.h>
 
 #include <asm/setup.h>
 #include <asm/mach-types.h>
@@ -34,11 +38,13 @@
 #include <mach/pinctrl.h>
 #include <mach/regs-ocotp.h>
 
+
 #include "device.h"
 #include "mx23evk.h"
 #include "mx23_pins.h"
 
 // #define AT24C256
+//#define TS_PENIRQ_GPIO PINID_SSP1_DATA1
 
 static struct at24_platform_data at24cXXX_platdata = {
     .byte_len    = SZ_8K / 8,
@@ -64,20 +70,94 @@ static void i2c_device_init(void)
 	i2c_register_board_info(0, &at24cXXX_i2c_device, 1);
 }
 
-static struct spi_board_info spi_board_info[] __initdata = {
-#if defined(CONFIG_ENC28J60) || defined(CONFIG_ENC28J60_MODULE)
-	{
-		.modalias       = "enc28j60",
-		.max_speed_hz   = 6 * 1000 * 1000,
-		.bus_num	= 1,
-		.chip_select    = 0,
-	},
+#if defined(CONFIG_SPI_MXS) || defined(CONFIG_SPI_MXS_MODULE)
+static struct mxs_spi_platform_data ssp1_data = {
+	.hw_pin_init = mxs_spi_enc_pin_init,
+	.hw_pin_release = mxs_spi_enc_pin_release,
+	.clk = "ssp.0",
+};
 #endif
+
+#if defined(CONFIG_TOUCHSCREEN_ADS7846)
+//#define TS_PENIRQ_GPIO PINID_PWM2
+#define TS_PENIRQ_GPIO PINID_GPMI_D05
+
+
+
+
+struct platform_device sk_spi_gpio_device = {
+       .name    = "mxs-spi",
+       .id      = 1,
+       .dev     = {
+                .platform_data = &ssp1_data,
+       },
+};
+
+static int ads7846_dev_init(void)
+{ 
+        if (gpio_request(MXS_PIN_TO_GPIO(TS_PENIRQ_GPIO), "ADS7846 pendown") < 0)
+                printk(KERN_ERR "can't get ads7846 pen down GPIO\n");
+
+        gpio_direction_input(MXS_PIN_TO_GPIO(TS_PENIRQ_GPIO));
+        set_irq_type(gpio_to_irq(MXS_PIN_TO_GPIO(TS_PENIRQ_GPIO)), IRQ_TYPE_EDGE_FALLING);
+
+        return gpio_to_irq(MXS_PIN_TO_GPIO(TS_PENIRQ_GPIO));
+}
+
+static int ads7843_pendown_state(void)
+{
+        return !gpio_get_value(MXS_PIN_TO_GPIO(TS_PENIRQ_GPIO));      /* Touchscreen PENIRQ */
+}
+
+static struct ads7846_platform_data ads_info = {
+        .model                  = 7846,
+        .x_min                  = 150,
+        .x_max                  = 3830,
+        .y_min                  = 190,
+        .y_max                  = 3830,
+        .vref_delay_usecs       = 0,//100
+		.penirq_recheck_delay_usecs = 1000,//Nuevo
+        .debounce_max           = 20,//10
+        .debounce_tol           = 7,//3
+        .debounce_rep           = 1,//1
+		.x_plate_ohms           = 250,
+        .y_plate_ohms           = 450,
+		.swap_xy 				= 1,
+        .get_pendown_state      = ads7843_pendown_state,
+//		.wakeup 				= 1,
+//	    .keep_vref_on			=1,
+};
+#endif
+
+static struct spi_board_info spi_board_info[] __initdata = {
+#if defined(CONFIG_TOUCHSCREEN_ADS7846)
+//       [0]= {       /* Touchscreen support */
+//                .modalias       = "ads7846",
+//                .max_speed_hz   = 100 * 1000,
+//                .bus_num        = 1,
+//                .controller_data = (void *) MXS_PIN_TO_GPIO(PINID_SSP1_DATA3),
+//                .platform_data  = &ads_info,
+//        },
+//#endif
+//#if defined(CONFIG_KS8851) || defined(CONFIG_KS8851_MODULE) 
+	[0] = {
+		.modalias       = "ads7846",
+		.max_speed_hz   = 120000,
+ 		.bus_num	= 1,
+ 		.chip_select    = 0,
+		.irq            = PINID_SSP1_DATA1,
+ 		.platform_data  = &ads_info,
+ 	},
+ #endif
 };
 
 static void spi_device_init(void)
 {
-	spi_board_info[0].irq = gpio_to_irq(MXS_PIN_TO_GPIO(PINID_SSP1_DATA1));
+#if defined(CONFIG_TOUCHSCREEN_ADS7846)
+        platform_device_register(&sk_spi_gpio_device);
+        spi_board_info[0].irq = ads7846_dev_init();
+#endif
+	//spi_board_info[0].irq = gpio_to_irq(MXS_PIN_TO_GPIO(PINID_SSP1_DATA1));
 	spi_register_board_info(spi_board_info, ARRAY_SIZE(spi_board_info));
 }
 
