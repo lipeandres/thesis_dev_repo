@@ -110,15 +110,17 @@ static int ads7843_pendown_state(void)
 }
 
 static struct ads7846_platform_data ads_info = {
-        .model                  = 7846,
+        .model                  = 7843,
         .x_min                  = 150,
         .x_max                  = 3830,
         .y_min                  = 190,
         .y_max                  = 3830,
         .vref_delay_usecs       = 0,//100
-		.penirq_recheck_delay_usecs = 1000,//Nuevo
-        .debounce_max           = 20,//10
-        .debounce_tol           = 7,//3
+		.penirq_recheck_delay_usecs = 200,//Nuevo
+		.pressure_min			= 128,	
+		.pressure_max			= 1024,
+        .debounce_max           = 12,//10
+        .debounce_tol           = 4,//3
         .debounce_rep           = 1,//1
 		.x_plate_ohms           = 250,
         .y_plate_ohms           = 450,
