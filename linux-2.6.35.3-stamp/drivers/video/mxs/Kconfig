@@ -21,6 +21,13 @@ config FB_MXS_LCD_LMS430
 	---help---
 	  Use LMS430 dotclock LCD panel for MXS
 
+config FB_MXS_LCD_SSD1963
+	depends on ARCH_MXS
+	bool "SSD1963"
+	---help---
+	  Use SSD1963 smart LCD panel for MXS
+
+
 config FB_MXS_TVENC
 	depends on ARCH_MXS
 	bool "TVENC"

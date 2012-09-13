@@ -189,6 +189,8 @@ static void mxs_schedule_work(struct mxs_fb_data *data, u32 state)
 
 	local_irq_restore(flags);
 }
+//SSD1963
+void mpulcd_start_refresh(void);
 
 static irqreturn_t lcd_irq_handler(int irq, void *dev_id)
 {
@@ -205,9 +207,12 @@ static irqreturn_t lcd_irq_handler(int irq, void *dev_id)
 	}
 	if (status_lcd & BM_LCDIF_CTRL1_CUR_FRAME_DONE_IRQ) {
 		pr_debug("%s: frame done irq\n", __func__);
+	//SSD1963		
+	mpulcd_start_refresh();
 		__raw_writel(BM_LCDIF_CTRL1_CUR_FRAME_DONE_IRQ,
 			     data->regbase + HW_LCDIF_CTRL1_CLR);
-		data->vsync_count++;
+//SSD1963
+		//data->vsync_count++;
 	}
 	if (status_lcd & BM_LCDIF_CTRL1_UNDERFLOW_IRQ) {
 		pr_debug("%s: underflow irq\n", __func__);

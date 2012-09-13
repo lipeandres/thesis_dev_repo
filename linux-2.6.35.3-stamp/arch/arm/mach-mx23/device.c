@@ -996,6 +996,7 @@ int __init mx23_device_init(void)
 	mx23_init_rtc();
 	mx23_init_dcp();
 	mx23_init_ssp1();
+	//mx23_init_spi1();	
 	mx23_init_ssp2();
 	//mx23_init_spdif();
 	mx23_init_lcdif();
