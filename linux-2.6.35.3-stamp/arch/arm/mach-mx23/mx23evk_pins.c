@@ -39,11 +39,26 @@ static struct pin_desc mx23evk_fixed_pins[] = {
 	 .id = PINID_PWM1,
 	 .fun = PIN_FUN3,
 	 }, 
-#if defined(CONFIG_I2C_MXS) || \
+	{
+	 .name = "AUART1.RX",
+	 .id = PINID_I2C_SDA,
+	 .fun = PIN_FUN3,
+	 .strength = PAD_4MA,
+	 .voltage = PAD_3_3V,
+//	 .drive	= 1,
+	 },
+	{
+	 .name = "AUART1.TX",
+	 .id = PINID_I2C_SCL,
+	 .fun = PIN_FUN3,
+	 .strength = PAD_4MA,
+	 .voltage = PAD_3_3V,
+//	 .drive	= 1,
+	 },
+/*#if defined(CONFIG_I2C_MXS) || \
 	defined(CONFIG_I2C_MXS_MODULE)
 	{
 	 .name = "I2C_SCL",
-	 .id = PINID_I2C_SCL,
 	 .fun = PIN_FUN1,
 	 .strength = PAD_4MA,
 	 .voltage = PAD_3_3V,
@@ -58,6 +73,7 @@ static struct pin_desc mx23evk_fixed_pins[] = {
 	 .drive	= 1,
 	 },
 #endif
+*/
 #if defined(CONFIG_FB_MXS) || defined(CONFIG_FB_MXS_MODULE)
 	{
 	 .name  = "LCD_D00",
