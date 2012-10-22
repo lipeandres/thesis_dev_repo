@@ -1,0 +1,362 @@
+/***************************************************************************
+ *   Copyright (C) 2006 by Anders Larsen                                   *
+ *   al@alarsen.net                                                        *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <jtag/interface.h>
+#include "bitbang.h"
+
+#include <sys/mman.h>
+#include <stdio.h>
+
+
+/* AT91RM9200 */
+#define IMX233_BASE_SYS	(0x80018000)
+
+/* GPIO assignment (MUX_REG)*/
+
+
+#define PIO_CTRL	(0)		/* PIO enable */
+#define PIO_MUXSEL	(0x100)		/* output enable */
+#define PIO_DRIVE	(0x200)		/* output disable */
+#define PIO_PULL	(0x400)		/* set output data */
+#define PIO_DOUT	(0x500)		/* clear output data */
+#define PIO_DIN 	(0x600)		/* pin data status */
+#define PIO_DOE 	(0x700)		/* pull-up enable */
+#define PIO_PIN2IRQ 	(0x800)		/* pull-up enable */
+#define PIO_IRQEN 	(0x900)		/* pull-up enable */
+#define PIO_IRLEV 	(0xa00)		/* pull-up enable */
+#define PIO_POL 	(0xb00)		/* pull-up enable */
+#define PIO_IRQSTAT 	(0xc00)		/* pull-up enable */
+
+#define SET             (0x4)
+#define CLR             (0x8)
+#define TOG             (0xC)
+
+
+#define PIO0	(0*4)  //0x00
+#define PIO1	(4*4)  //0x10
+#define PIO2	(8*4)  //0x20
+#define PIO3	(12*4) //0x30
+
+
+
+#define NC	(0)			/* not connected */
+#define P0	(1 << 0)
+#define P1	(1 << 1)
+#define P2	(1 << 2)
+#define P3	(1 << 3)
+#define P4	(1 << 4)
+#define P5	(1 << 5)
+#define P6	(1 << 6)
+#define P7	(1 << 7)
+#define P8	(1 << 8)
+#define P9	(1 << 9)
+#define P10	(1 << 10)
+#define P11	(1 << 11)
+#define P12	(1 << 12)
+#define P13	(1 << 13)
+#define P14	(1 << 14)
+#define P15	(1 << 15)
+#define P16	(1 << 16)
+#define P17	(1 << 17)
+#define P18	(1 << 18)
+#define P19	(1 << 19)
+#define P20	(1 << 20)
+#define P21	(1 << 21)
+#define P22	(1 << 22)
+#define P23	(1 << 23)
+#define P24	(1 << 24)
+#define P25	(1 << 25)
+#define P26	(1 << 26)
+#define P27	(1 << 27)
+#define P28	(1 << 28)
+#define P29	(1 << 29)
+#define P30	(1 << 30)
+#define P31	(1 << 31)
+
+
+
+struct device_t
+{
+	char* name;
+	int TDO_PIO;	/* BANK holding TDO */
+	uint32_t TDO_PIN;
+	uint32_t TDO_MASK;	/* TDO bitmask */
+
+	int TRST_PIO;	/* BANK holding TRST */
+	uint32_t TRST_PIN;
+	uint32_t TRST_MASK;	/* TRST bitmask */
+
+	int TMS_PIO;	/* BANK holding TMS */
+	uint32_t TMS_PIN;
+	uint32_t TMS_MASK;	/* TMS bitmask */
+
+	int TCK_PIO;	/* BANK holding TCK */
+	uint32_t TCK_PIN;
+	uint32_t TCK_MASK;	/* TCK bitmask */
+
+	int TDI_PIO;	/* BANK holding TDI */
+	uint32_t TDI_PIN;
+	uint32_t TDI_MASK;	/* TDI bitmask */
+
+	int SRST_PIO;	/* BANK holding SRST */
+	uint32_t SRST_PIN;
+	uint32_t SRST_MASK;	/* SRST bitmask */
+
+	int BOOTSEL_PIO;	/* BANK holding BOOT0 */
+	uint32_t BOOTSEL_PIN;
+	uint32_t BOOTSEL_MASK;/* BOOT0 bitmask */
+};
+
+//TDO	-> 	GPMI_CE1N	-> bank 2, muxreg 5 bits 22-23, Pin 27     
+//TRST	->	GPMI_CE0N	-> bank 2, muxreg 5 bits 24-25, Pin 28
+//TMS	->	SSPI_DATA3	-> bank 2, muxreg 4 bits 10-11, Pin 5	
+//TCK	->	SSPI_DETECT	-> bank 2, muxreg 4 bits 2-3, Pin 1
+//TDI	->	PWM2		-> bank 1, muxreg 3 bits 24-25, Pin 28
+//SRST	->	gpmi-d06 (RESET) -> bank 0, muxreg 0 bits 12-13, Pin 6
+//NEW
+//BOOT0	->	gpmi_wpn	-> bank 0, muxreg 1 bits 14-15, Pin 23       
+
+
+static struct device_t devices[] =
+{
+                          //TDO     |    TRST     |      TMS   |       TCK  |    TDI       |   SRST      | BOOTSEL
+	{ "rea_ecr", 
+	PIO2 , 27, P27, 
+	PIO2, 28, P28, 
+	PIO2, 5, P5, 
+	PIO2, 1, P1, 
+	PIO1, 28, P28, 
+	PIO0, 6, P6,
+	PIO0, 23, P23 },
+//	{ "rea_ecr", PIO2 , 3, P3, PIO2, 28, P28, PIO2, 5, P5, PIO2, 1, P1, PIO2, 4, P4, PIO0, 7, P7 }, // Reset en el LED para test
+	{ .name = NULL },
+};
+
+/* configuration */
+static char* imx233_device;
+
+/* interface variables
+ */
+static struct device_t* device;
+static int dev_mem_fd;
+static void *sys_controller;
+static uint32_t* pio_base;
+
+/* low level command set
+ */
+static int imx233_read(void);
+static void imx233_write(int tck, int tms, int tdi);
+static void imx233_reset(int trst, int srst);
+
+static int imx233_speed(int speed);
+static int imx233_init(void);
+static int imx233_quit(void);
+
+static struct bitbang_interface imx233_bitbang =
+{
+	.read = imx233_read,
+	.write = imx233_write,
+	.reset = imx233_reset,
+	.blink = 0
+};
+
+static int imx233_read(void)
+{
+	return (pio_base[(device->TDO_PIO + PIO_DIN)/sizeof(uint32_t)] & device->TDO_MASK);
+}
+
+static void imx233_write(int tck, int tms, int tdi)
+{
+	if (tck)
+		pio_base[(device->TCK_PIO + PIO_DOUT + SET)/sizeof(uint32_t)] = device->TCK_MASK;
+	else
+		pio_base[(device->TCK_PIO + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->TCK_MASK;
+
+	if (tms)
+		pio_base[(device->TMS_PIO + PIO_DOUT + SET)/sizeof(uint32_t)] = device->TMS_MASK;
+	else
+		pio_base[(device->TMS_PIO + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->TMS_MASK;
+
+	if (tdi)
+		pio_base[(device->TDI_PIO + PIO_DOUT + SET)/sizeof(uint32_t)] = device->TDI_MASK;
+	else
+		pio_base[(device->TDI_PIO + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->TDI_MASK;
+}
+
+/* (1) assert or (0) deassert reset lines */
+static void imx233_reset(int trst, int srst)
+{
+
+		
+//Bring BOOTSEL Low again after programming to make the reset effective 
+	if (trst == 0)
+		pio_base[(device->TRST_PIO + PIO_DOUT + SET)/sizeof(uint32_t)] = device->TRST_MASK;
+	else if (trst == 1){
+		pio_base[(device->TRST_PIO + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->TRST_MASK;
+		}
+	if (srst == 0)
+		pio_base[(device->SRST_PIO + PIO_DOUT + SET)/sizeof(uint32_t)] = device->SRST_MASK;
+	else if (srst == 1){
+		pio_base[(device->SRST_PIO + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->SRST_MASK;
+		printf("bootsel down\n");
+		pio_base[(device->BOOTSEL_PIO  + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->BOOTSEL_MASK;
+		}
+
+}
+
+static int imx233_speed(int speed)
+{
+
+	return ERROR_OK;
+}
+
+COMMAND_HANDLER(imx233_handle_device_command)
+{
+	if (CMD_ARGC == 0)
+		return ERROR_OK;
+
+	/* only if the device name wasn't overwritten by cmdline */
+	if (imx233_device == 0)
+	{
+		imx233_device = malloc(strlen(CMD_ARGV[0]) + sizeof(char));
+		strcpy(imx233_device, CMD_ARGV[0]);
+	}
+
+	return ERROR_OK;
+}
+
+static const struct command_registration imx233_command_handlers[] = {
+	{
+		.name = "imx233_device",
+		.handler = &imx233_handle_device_command,
+		.mode = COMMAND_CONFIG,
+		.help = "query armjtagew info",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+struct jtag_interface imx233_interface =
+{
+	.name = "imx233",
+
+	.execute_queue = bitbang_execute_queue,
+
+	.speed = imx233_speed,
+	.commands = imx233_command_handlers,
+	.init = imx233_init,
+	.quit = imx233_quit,
+};
+
+static int imx233_init(void)
+{
+	struct device_t *cur_device;
+
+	cur_device = devices;
+
+	if (imx233_device == NULL || imx233_device[0] == 0)
+	{
+		imx233_device = "rea_ecr";
+		LOG_WARNING("No imx233 device specified, using default 'rea_ecr'");
+	}
+
+	while (cur_device->name)
+	{
+		if (strcmp(cur_device->name, imx233_device) == 0)
+		{
+			device = cur_device;
+			break;
+		}
+		cur_device++;
+	}
+
+	if (!device)
+	{
+		LOG_ERROR("No matching device found for %s", imx233_device);
+		return ERROR_JTAG_INIT_FAILED;
+	}
+
+	bitbang_interface = &imx233_bitbang;
+
+	dev_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+	if (dev_mem_fd < 0) {
+		perror("open");
+		return ERROR_JTAG_INIT_FAILED;
+	}
+
+	sys_controller = mmap(NULL, 4096, PROT_READ | PROT_WRITE,
+				MAP_SHARED, dev_mem_fd, IMX233_BASE_SYS);
+	if (sys_controller == MAP_FAILED) {
+		perror("mmap");
+		close(dev_mem_fd);
+		return ERROR_JTAG_INIT_FAILED;
+	}
+	pio_base = (uint32_t*)sys_controller;
+
+
+	/*
+	 * Configure TDO, TDI, TCK, TMS, TRST, SRST, BOOT0 as GPIOs. 
+	 */
+
+	pio_base[(2*( device->TDI_PIO ) + PIO_MUXSEL + 16*(device->TDI_PIN/16)  + SET)/sizeof(uint32_t)] = (0x3 << 2*(device->TDI_PIN - 16)); // Set pin as GPIO
+	pio_base[(2*( device->TCK_PIO ) + PIO_MUXSEL + 16*(device->TCK_PIN/16)  + SET)/sizeof(uint32_t)] = (0x3 << 2*(device->TCK_PIN));
+	pio_base[(2*( device->TMS_PIO ) + PIO_MUXSEL + 16*(device->TMS_PIN/16)  + SET)/sizeof(uint32_t)] = (0x3 << 2*(device->TMS_PIN));
+	pio_base[(2*( device->TRST_PIO) + PIO_MUXSEL + 16*(device->TRST_PIN/16) + SET)/sizeof(uint32_t)] = (0x3 << 2*((device->TRST_PIN - 16)));
+	pio_base[(2*( device->SRST_PIO) + PIO_MUXSEL + 16*(device->SRST_PIN/16) + SET)/sizeof(uint32_t)] = (0x3 << 2*(device->SRST_PIN));
+	pio_base[(2*( device->TDO_PIO ) + PIO_MUXSEL + 16*(device->TDO_PIN/16)  + SET)/sizeof(uint32_t)] = (0x3 << 2*(device->TDO_PIN -16));
+
+	printf("bootsel configured\n");
+	pio_base[(2*( device->BOOTSEL_PIO ) + PIO_MUXSEL + 16*(device->BOOTSEL_PIN/16)  + SET)/sizeof(uint32_t)] = (0x3 << 2*(device->BOOTSEL_PIN -16));
+
+
+	/*
+	 * Configure TDO as an input; TDI, TCK, TMS, TRST, SRST, BOOTSEL as outputs. 
+	 */
+
+	pio_base[(device->TDI_PIO  + PIO_DOE + SET)/sizeof(uint32_t)] = device->TDI_MASK;   // Set as OUTPUT
+	pio_base[(device->TCK_PIO  + PIO_DOE + SET)/sizeof(uint32_t)] = device->TCK_MASK;   // Set as OUTPUT
+	pio_base[(device->TMS_PIO  + PIO_DOE + SET)/sizeof(uint32_t)] = device->TMS_MASK;   // Set as OUTPUT
+	pio_base[(device->TRST_PIO + PIO_DOE + SET)/sizeof(uint32_t)] = device->TRST_MASK;  // Set as OUTPUT
+	pio_base[(device->SRST_PIO + PIO_DOE + SET)/sizeof(uint32_t)] = device->SRST_MASK;  // Set as OUTPUT
+	printf("bootsel up\n");
+	pio_base[(device->BOOTSEL_PIO + PIO_DOE + SET)/sizeof(uint32_t)] = device->BOOTSEL_MASK;  // Set as OUTPUT
+	pio_base[(device->TDO_PIO  + PIO_DOE + CLR)/sizeof(uint32_t)] = device->TDO_MASK;   // Set as INPUT
+
+	/* Drive TDI and TCK low, and TMS/TRST/SRST high. */
+
+	pio_base[(device->TDI_PIO  + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->TDI_MASK;
+	pio_base[(device->TCK_PIO  + PIO_DOUT + CLR)/sizeof(uint32_t)] = device->TCK_MASK;
+
+	pio_base[(device->TMS_PIO  + PIO_DOUT + SET)/sizeof(uint32_t)] = device->TMS_MASK;
+	pio_base[(device->BOOTSEL_PIO  + PIO_DOUT + SET)/sizeof(uint32_t)] = device->BOOTSEL_MASK;
+	pio_base[(device->TRST_PIO + PIO_DOUT + SET)/sizeof(uint32_t)] = device->TRST_MASK;
+	pio_base[(device->SRST_PIO + PIO_DOUT + SET)/sizeof(uint32_t)] = device->SRST_MASK;
+
+
+	return ERROR_OK;
+}
+
+static int imx233_quit(void)
+{
+
+	return ERROR_OK;
+}
