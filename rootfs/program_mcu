@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+./stmbootsel
+./openocd -f openocd.cfg
+./stmbootclr
+sleep 3
+./openocd -f openocd_read_id.cfg
+
