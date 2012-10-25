@@ -141,3 +141,23 @@
 
 # I2C device nodes
 /dev/i2c-	c	666	0	0	89	0	0	1	4
+
+# Audio stuff
+/dev/audio	c	666	0	29	14	4	-	-	-
+#/dev/audio1	c	666	0	29	14	20	-	-	-
+/dev/dsp	c	666	0	29	14	3	-	-	-
+#/dev/dsp1	c	666	0	29	14	19	-	-	-
+#/dev/sndstat	c	666	0	29	14	6	-	-	-
+/dev/mixer	c	666	0	29	14	0	-	-	-
+/dev/snd	d	755	0	29	-	-	-	-	-
+/dev/snd/controlC0	c	666	0	29	116	0	-	-	-
+/dev/snd/pcmC0D0c	c	666	0	29	116	24	-	-	-
+/dev/snd/pcmC0D0p	c	666	0	29	116	16	-	-	-
+/dev/snd/seq	c	666	0	29	116	1	-	-	-
+/dev/snd/timer	c	666	0	29	116	33	-
+
+#	<name>			<type>	<mode>	<uid>	<gid>	<major>	<minor>	<start>	<inc>	<count>
+#Third filesystem partition for backup purposes
+	/dev/mmcblk0p3	b		640		0		0		179		3		-		-		-
+#imx233 Auart1 node
+	/dev/ttySP1		c		666		0		0		242		1		-		-		-
