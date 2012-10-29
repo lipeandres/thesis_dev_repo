@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+if [ $# -eq 0 ]
+  then
+    echo "No arguments supplied, programming ch.bin"
+		echo "set FILE ch.bin" > tmp.cfg
+  else
+		echo "Programming $1"
+		echo "set FILE $1" > tmp.cfg	
+fi
+./stmbootsel
+./openocd -f openocd.cfg
+./stmbootclr
+sleep 3
+./openocd -f openocd_read_id.cfg
+rm tmp.cfg
