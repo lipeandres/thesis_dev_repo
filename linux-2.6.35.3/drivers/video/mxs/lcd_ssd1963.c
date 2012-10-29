@@ -16,6 +16,8 @@
 #define lcdif_read(reg) __raw_readl(REGS_LCDIF_BASE + reg)
 #define lcdif_write(reg,val) __raw_writel(val, REGS_LCDIF_BASE + reg)
 
+#define LCD_FLIPPED 0
+
 static struct clk *lcd_clk;
 
 static char lcd_init_data[] =
@@ -31,8 +33,12 @@ static char lcd_init_data[] =
 	0x00, 0xe0, 
 		0x01, 0x03,
 //BGR pixel format
-   	0x00, 0x36, 
+   	0x00, 0x36,
+#if LCD_FLIPPED 
 	 	0x01, 0x8A,//0x08 No framebuffer flipping, just BGR format  
+#else
+		0x01, 0x08,
+#endif
 //general conf 
 	0x00, 0xb0, 
 		0x01, 0x08,//TTL Mode 0x0c 
