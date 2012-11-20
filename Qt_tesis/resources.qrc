@@ -1,0 +1,35 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>Send.png</file>
+        <file>ClearB.png</file>
+        <file>ClearR.png</file>
+        <file>Clear.png</file>
+        <file>ObdOff.png</file>
+        <file>ObdOn.png</file>
+        <file>RunOff.png</file>
+        <file>RunOn.png</file>
+        <file>MusicOff.png</file>
+        <file>MusicOn.png</file>
+        <file>forwardButtonEnabled.png</file>
+        <file>backwardButtonEnabled.png</file>
+        <file>PauseButtonEnabled.png</file>
+        <file>PlayButtonEnabled.png</file>
+        <file>forwardButtonDisabled.png</file>
+        <file>backwardButtonDisabled.png</file>
+        <file>PauseButtonDisabled.png</file>
+        <file>PlayButtonDisabled.png</file>
+        <file>background.png</file>
+        <file>CalOff.png</file>
+        <file>CalOn.png</file>
+        <file>checkOn.png</file>
+        <file>checkOff.png</file>
+        <file>temp.png</file>
+        <file>fuel.png</file>
+        <file>spinDown.png</file>
+        <file>spinUp.png</file>
+        <file>setPlate.png</file>
+        <file>setTime.png</file>
+        <file>setDate.png</file>
+        <file>okConfig.png</file>
+    </qresource>
+</RCC>

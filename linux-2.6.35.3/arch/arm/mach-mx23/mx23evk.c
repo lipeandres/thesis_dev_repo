@@ -110,7 +110,7 @@ static int ads7843_pendown_state(void)
 }
 
 static struct ads7846_platform_data ads_info = {
-        .model                  = 7843,
+        .model                  = 7846,
         .x_min                  = 150,
         .x_max                  = 3830,
         .y_min                  = 190,

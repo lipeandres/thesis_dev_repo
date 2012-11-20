@@ -123,7 +123,7 @@ void PowerPrep_PrintBatteryVoltage(unsigned int value);
 #define VDD4P2_ENABLED
 
 
-#define MAX_4P2_CAP_CHARGE_TIME 10000
+#define MAX_4P2_CAP_CHARGE_TIME 100
 #define BOOTUP_CHARGE_4P2_CURRENT_LIMIT 780
 #define POWER_PREP_MINIMUM_VALID_BATTERY_BOOTUP_VOLTAGE 3200
 #define MAX_BATTERY_CAPACITOR_SIZE_UF 100
@@ -221,20 +221,12 @@ int _start( void )
 	printf("\r\nbooting...\r\n");
 	hw_digctl_MicrosecondWait(1000000);
 
-	printf("\r\nPowerPrep start initialize power...\r\n");
-
-	PowerPrep_Enable4p2();
-
-	ddi_power_SetVddio(3300, 3000);
-
-	hw_digctl_MicrosecondWait(100000);
-
-//	HW_POWER_VDDDCTRL.B.LINREG_OFFSET = 2;
-//	HW_POWER_VDDACTRL.B.LINREG_OFFSET = 2;
-//	HW_POWER_VDDIOCTRL.B.LINREG_OFFSET = 2;
-
 	return SUCCESS;
 
+	printf("\r\nPowerPrep start initialize power...\r\n");
+	HW_POWER_VDDDCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
+	HW_POWER_VDDACTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
+	HW_POWER_VDDIOCTRL.B.LINREG_OFFSET = HW_POWER_LINREG_OFFSET_STEP_BELOW;
 /*
         PowerPrep_Init4p2Parameters();
         PowerPrep_Init4p2Regulator();
@@ -577,66 +569,60 @@ void PowerPrep_Enable4p2( void )
 	* DCDC operation and arrive at this point, the device will fail.
 	*/
 
-	// VIER
-
 	vdddctrl = HW_POWER_VDDDCTRL_RD();
 	vddactrl = HW_POWER_VDDACTRL_RD();
 	vddioctrl = HW_POWER_VDDIOCTRL_RD();
 
-	HW_POWER_VDDDCTRL_SET(BM_POWER_VDDDCTRL_DISABLE_FET | BM_POWER_VDDDCTRL_ENABLE_LINREG );
+	HW_POWER_VDDDCTRL_SET(BM_POWER_VDDDCTRL_DISABLE_FET |
+		BM_POWER_VDDDCTRL_ENABLE_LINREG |
+		BM_POWER_VDDDCTRL_PWDN_BRNOUT);
 
-	HW_POWER_VDDACTRL_SET(BM_POWER_VDDACTRL_DISABLE_FET | BM_POWER_VDDACTRL_ENABLE_LINREG );
+	HW_POWER_VDDACTRL_SET(BM_POWER_VDDACTRL_DISABLE_FET |
+		BM_POWER_VDDDCTRL_ENABLE_LINREG |
+		BM_POWER_VDDDCTRL_PWDN_BRNOUT);
 
-	HW_POWER_VDDIOCTRL_SET(BM_POWER_VDDIOCTRL_DISABLE_FET);
+	HW_POWER_VDDIOCTRL_SET(BM_POWER_VDDIOCTRL_DISABLE_FET |
+		BM_POWER_VDDDCTRL_PWDN_BRNOUT);
 
-	HW_POWER_VDDDCTRL_CLR(BM_POWER_VDDDCTRL_PWDN_BRNOUT);
-	HW_POWER_VDDACTRL_CLR(BM_POWER_VDDACTRL_PWDN_BRNOUT);
-	HW_POWER_VDDIOCTRL_CLR(BM_POWER_VDDIOCTRL_PWDN_BRNOUT);
+	PowerPrep_Init4p2Parameters();
 
-	//PowerPrep_Init4p2Parameters();
-
-	//PowerPrep_Init4p2Regulator();
+	PowerPrep_Init4p2Regulator();
 
 	/* if battery isn't ready, go ahead and shutdown on a 4p2 brownout
 	* (because hardware battery brownout is disabled if 5V is present
 	*/
 
-//	if(!bBatteryReady)
-//		PowerPrep_Enable4p2BoShutdown();
-//	else
-//	{
-//		/* in the case where 4p2 browns out, battery needs to
-//		* take over powering the system.  We need to ensure
-//		* the battery voltage level is sufficient to do so.
-//		* Otherwise, the DCDC will keep sourcing from battery
-//		* and 4p2 down to level below the safe minimum
-//		* operating level of the DCDC.
-//		*/
-//		PowerPrep_InitBattBoFiq();
-//	}
 
-	//PowerPrep_InitDcdc4p2Source();
 
-	//HW_POWER_DCDC4P2.B.ENABLE_DCDC = 1;
-	//HW_POWER_5VCTRL.B.ENABLE_DCDC = 1;
+	if(!bBatteryReady)
+		PowerPrep_Enable4p2BoShutdown();
+	else
+	{
+		/* in the case where 4p2 browns out, battery needs to
+		* take over powering the system.  We need to ensure
+		* the battery voltage level is sufficient to do so.
+		* Otherwise, the DCDC will keep sourcing from battery
+		* and 4p2 down to level below the safe minimum
+		* operating level of the DCDC.
+		*/
+		PowerPrep_InitBattBoFiq();
+	}
+
+	PowerPrep_InitDcdc4p2Source();
 
 	hw_digctl_MicrosecondWait(200);
 	printf("VDDD...\r\n");
-	HW_POWER_VDDDCTRL_CLR(BM_POWER_VDDDCTRL_DISABLE_FET | BM_POWER_VDDDCTRL_ENABLE_LINREG );
-
+	HW_POWER_VDDDCTRL_WR(vdddctrl);
 	/* before enabling vdda fet, give some small delay to allow DCDC to handle new load
 	* if vddd fet is getting enabled */
 	hw_digctl_MicrosecondWait(200);
-
 	printf("VDDA...\r\n");
-	HW_POWER_VDDACTRL_CLR(BM_POWER_VDDACTRL_DISABLE_FET | BM_POWER_VDDACTRL_ENABLE_LINREG );
-
+	HW_POWER_VDDACTRL_WR(vddactrl);
 	/* before enabling vddio fet, give some small delay to allow DCDC to handle new load
 	* if vdda fet is getting enabled */
 	hw_digctl_MicrosecondWait(200);
-
 	printf("VDDIO...\r\n");
-	HW_POWER_VDDIOCTRL_CLR(BM_POWER_VDDIOCTRL_DISABLE_FET);
+	HW_POWER_VDDIOCTRL_WR(vddioctrl);
 
 	if( (HW_POWER_VDDDCTRL.B.DISABLE_FET == 0) ||
 		(HW_POWER_VDDACTRL.B.DISABLE_FET == 0) ||

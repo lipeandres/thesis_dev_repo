@@ -57,4 +57,5 @@ export TSLIB_TSDEVICE=/dev/input/event0
 export TSLIB_CONFFILE=/etc/ts.conf
 export QWS_MOUSE_PROTO=tslib
 export TSLIB_CALIBFILE=/etc/pointercal
-#hola
+export QWS_SIZE=480x272
+export QWS_DISPLAY=directfb:/dev/fb0

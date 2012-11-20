@@ -593,9 +593,9 @@ void PowerPrep_Enable4p2( void )
 	HW_POWER_VDDACTRL_CLR(BM_POWER_VDDACTRL_PWDN_BRNOUT);
 	HW_POWER_VDDIOCTRL_CLR(BM_POWER_VDDIOCTRL_PWDN_BRNOUT);
 
-	//PowerPrep_Init4p2Parameters();
+	PowerPrep_Init4p2Parameters();
 
-	//PowerPrep_Init4p2Regulator();
+	PowerPrep_Init4p2Regulator();
 
 	/* if battery isn't ready, go ahead and shutdown on a 4p2 brownout
 	* (because hardware battery brownout is disabled if 5V is present
@@ -615,10 +615,10 @@ void PowerPrep_Enable4p2( void )
 //		PowerPrep_InitBattBoFiq();
 //	}
 
-	//PowerPrep_InitDcdc4p2Source();
+	PowerPrep_InitDcdc4p2Source();
 
-	//HW_POWER_DCDC4P2.B.ENABLE_DCDC = 1;
-	//HW_POWER_5VCTRL.B.ENABLE_DCDC = 1;
+	HW_POWER_DCDC4P2.B.ENABLE_DCDC = 1;
+	HW_POWER_5VCTRL.B.ENABLE_DCDC = 1;
 
 	hw_digctl_MicrosecondWait(200);
 	printf("VDDD...\r\n");
