@@ -19,6 +19,8 @@
 #include <QFileSystemModel>
 #include "SlidingStackedWidget.h"
 #include "widgetKeyBoard.h"
+#include <QList>
+#include "carevent.h"
 
 class QAction;
 class QTableWidget;
@@ -228,11 +230,13 @@ private:
     QSpinBox *wdayCombo;
     QDateEdit *dateSpin;
     QTimeEdit *timeSpin;
+    QList<CarEvent> carEventList1;
+    QList<CarEvent> carEventList2;
+    QString carEventFilePath;
 
 private slots:
     void stmReadRTC	(int,ComInfo*);
     void stmWriteRTC(int,ComInfo*);
-
     void addFiles();
     void about();
     void stateChanged(Phonon::State newState, Phonon::State oldState);
@@ -241,7 +245,8 @@ private slots:
     void metaStateChanged(Phonon::State newState, Phonon::State oldState);
     void aboutToFinish();
     void tableClicked(int row, int column);
-
+    void fileSaveTest();
+    void fileOpenTest();
 };
 
 #endif // MAINWINDOW_H

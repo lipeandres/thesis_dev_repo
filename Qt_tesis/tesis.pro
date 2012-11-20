@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     abstractmeter.cpp \
     widgetwithbackground.cpp \
     widgetKeyBoard.cpp \
-    MainWindow.cpp
+    MainWindow.cpp \
+    carevent.cpp
 
 
 HEADERS  += MainWindow.h \
@@ -32,7 +33,8 @@ HEADERS  += MainWindow.h \
     abstractmeter.h \
     widgetwithbackground.h \
     widgetKeyBoard.h \
-    customtm.h
+    customtm.h \
+    carevent.h
 
 RESOURCES += \
     resources.qrc

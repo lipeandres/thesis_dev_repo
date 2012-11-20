@@ -21,6 +21,8 @@
 #include "widgetKeyBoard.h"
 #include "examplemyfocus.h"
 #include "customtm.h"
+#include <QMessageBox>
+#include <QDebug>
 
 
 using namespace std;
@@ -436,13 +438,23 @@ void MainWindow::createSubSlidingWidgets() {
     QPushButton *configTime =new QPushButton;
     configTime->setFixedSize(370,30);
     connect(configTime, SIGNAL(clicked()),this, SLOT(SetIndexConfigTime()));
-
+    QPushButton *fileTestBtn = new QPushButton;
+    fileTestBtn->setText("File Test");
+    QPushButton *fileTestBtn2 = new QPushButton;
+    fileTestBtn2->setText("File Open");
+    carEventFilePath = QString("/home/felipe/Desktop/CarEventTestFile");
+    CarEvent *event1=new CarEvent(QString("20"),QString("11"),QString("2012"),QString("Tecnico"),132);
+    carEventList1.append(*event1);
+    connect(fileTestBtn,SIGNAL(clicked()),this,SLOT(fileSaveTest()));
+    connect(fileTestBtn2,SIGNAL(clicked()),this,SLOT(fileOpenTest()));
     QVBoxLayout *slideWidget4layout=new QVBoxLayout();
     slideWidget4=new QWidget();
     slideWidget4->setLayout(slideWidget4layout);
     slideWidget4->setStyleSheet("background-color: rgb(69,76,76);");
 
     slideWidget4layout->addWidget(configTime,0,Qt::AlignAbsolute);
+    slideWidget4layout->addWidget(fileTestBtn,0,Qt::AlignAbsolute);
+    slideWidget4layout->addWidget(fileTestBtn2,0,Qt::AlignAbsolute);
     slideWidget4layout->setMargin(0);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////SLIDEWIDGET5//////CONFIG TIME///////////////////////////////////////////////////////////////////////////////////////////
@@ -597,8 +609,6 @@ void MainWindow::SetIndexConfigHour(){
 slidingStacked->setCurrentIndex(6);
 }
 void MainWindow::SetIndexKeyBoard(){
-    slideWidget6layout->removeWidget(mykeyboard);
-    slideWidget1layout->addWidget(mykeyboard);
     this->mykeyboard->focusThis(LineEdit1);
     ButtonsOff();
     ButtonKeyboard->setIcon(ButtonKeyboardIconOn);
@@ -1339,5 +1349,31 @@ void MainWindow::setupUi()
 
     //setCentralWidget(widgetPhonon);
     //setWindowTitle("Phonon Music Player");
+}
+
+////////////////////////FILE MANAGEMENT SLOTS////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void MainWindow::fileSaveTest(){
+    QFile file(carEventFilePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+        return;
+    }
+    QDataStream out(&file);
+    out << carEventList1;
+    file.close();
+}
+
+void MainWindow::fileOpenTest(){
+    QFile file(carEventFilePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+        return;
+    }
+    QDataStream in(&file);
+    in >> carEventList2;
+    file.close();
+    qDebug()<<carEventList2.at(0).test.toInt();
+    return;
 }
 
