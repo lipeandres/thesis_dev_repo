@@ -10,6 +10,7 @@ QT       += core gui phonon
 TARGET = tesis
 TEMPLATE = app
 
+QMAKE_CXXFLAGS+=-fpermissive
 
 SOURCES += main.cpp\
     SlidingStackedWidget.cpp \

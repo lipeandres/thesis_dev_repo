@@ -247,6 +247,7 @@ private slots:
     void tableClicked(int row, int column);
     void fileSaveTest();
     void fileOpenTest();
+    bool checkPicoPlaca();
 };
 
 #endif // MAINWINDOW_H

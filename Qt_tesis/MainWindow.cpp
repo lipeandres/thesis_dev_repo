@@ -443,8 +443,8 @@ void MainWindow::createSubSlidingWidgets() {
     QPushButton *fileTestBtn2 = new QPushButton;
     fileTestBtn2->setText("File Open");
     carEventFilePath = QString("/home/felipe/Desktop/CarEventTestFile");
-    CarEvent *event1=new CarEvent(QString("20"),QString("11"),QString("2012"),QString("Tecnico"),132);
-    carEventList1.append(*event1);
+    CarEvent event1= CarEvent(20,12,2012,20);
+    carEventList1.append(event1);
     connect(fileTestBtn,SIGNAL(clicked()),this,SLOT(fileSaveTest()));
     connect(fileTestBtn2,SIGNAL(clicked()),this,SLOT(fileOpenTest()));
     QVBoxLayout *slideWidget4layout=new QVBoxLayout();
@@ -1373,7 +1373,12 @@ void MainWindow::fileOpenTest(){
     QDataStream in(&file);
     in >> carEventList2;
     file.close();
-    qDebug()<<carEventList2.at(0).test.toInt();
+    qDebug()<<carEventList2.at(0).daysToString(15,11,2013);
+    qDebug()<<carEventList2.at(0).daysToNumber(15,11,2013);
     return;
+}
+
+bool MainWindow::checkPicoPlaca(){
+
 }
 
