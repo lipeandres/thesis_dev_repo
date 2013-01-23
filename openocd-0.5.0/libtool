@@ -2,7 +2,7 @@
 
 # libtool - Provide generalized library-building support services.
 # Generated automatically by config.status (openocd) 0.5.0
-# Libtool was configured on host carto-laptop:
+# Libtool was configured on host felipe-vm:
 # NOTE: Changes made to this file will be lost: look at ltmain.sh.
 #
 #   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005,
@@ -62,13 +62,13 @@ SHELL="/bin/bash"
 ECHO="printf %s\\n"
 
 # The host system.
-host_alias=arm-linux
-host=arm-unknown-linux-gnu
-host_os=linux-gnu
+host_alias=arm-none-linux-gnueabi
+host=arm-none-linux-gnueabi
+host_os=linux-gnueabi
 
 # The build system.
-build_alias=i686-pc-linux-gnu
-build=i686-pc-linux-gnu
+build_alias=
+build=x86_64-unknown-linux-gnu
 build_os=linux-gnu
 
 # A sed program that does not truncate output.
@@ -87,7 +87,7 @@ EGREP="/bin/grep -E"
 FGREP="/bin/grep -F"
 
 # A BSD- or MS-compatible name lister.
-NM="/usr/bin/arm-linux-nm -B"
+NM="/home/felipe/thesis_dev_repo/buildroot-2011.08/output/host/usr/bin/arm-none-linux-gnueabi-nm -B"
 
 # Whether we need soft or hard links.
 LN_S="ln -s"
@@ -117,7 +117,7 @@ to_host_file_cmd=func_convert_file_noop
 to_tool_file_cmd=func_convert_file_noop
 
 # An object symbol dumper.
-OBJDUMP="arm-linux-objdump"
+OBJDUMP="arm-none-linux-gnueabi-objdump"
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method="pass_all"
@@ -138,7 +138,7 @@ DLLTOOL="false"
 sharedlib_from_linklib_cmd="printf %s\\n"
 
 # The archiver.
-AR="arm-linux-ar"
+AR="arm-none-linux-gnueabi-ar"
 
 # Flags to create an archive.
 AR_FLAGS="cru"
@@ -147,10 +147,10 @@ AR_FLAGS="cru"
 archiver_list_spec="@"
 
 # A symbol stripping program.
-STRIP="arm-linux-strip"
+STRIP="arm-none-linux-gnueabi-strip"
 
 # Commands used to install an old-style archive.
-RANLIB="arm-linux-ranlib"
+RANLIB="arm-none-linux-gnueabi-ranlib"
 old_postinstall_cmds="chmod 644 \$oldlib~\$RANLIB \$oldlib"
 old_postuninstall_cmds=""
 
@@ -158,10 +158,10 @@ old_postuninstall_cmds=""
 lock_old_archive_extraction=no
 
 # A C compiler.
-LTCC="arm-linux-gcc -std=gnu99"
+LTCC="arm-none-linux-gnueabi-gcc -std=gnu99"
 
 # LTCC compiler flags.
-LTCFLAGS="-g -O2 -Wall -Wstrict-prototypes -Wformat-security -Wshadow -Wextra -Wno-unused-parameter -Wbad-function-cast -Wcast-align -Wredundant-decls -Werror"
+LTCFLAGS="-g -O2 -Wall -Wstrict-prototypes -Wformat-security -Wshadow -Wextra -Wno-unused-parameter -Wbad-function-cast -Wcast-align -Wredundant-decls"
 
 # Take the output of nm and produce a listing of raw symbols and C names.
 global_symbol_pipe="sed -n -e 's/^.*[	 ]\\([ABCDGIRSTW][ABCDGIRSTW]*\\)[	 ][	 ]*\\([_A-Za-z][_A-Za-z0-9]*\\)\$/\\1 \\2 \\2/p' | sed '/ __gnu_lto/d'"
@@ -269,10 +269,10 @@ finish_eval=""
 hardcode_into_libs=yes
 
 # Compile-time system search path for libraries.
-sys_lib_search_path_spec="/usr/arm-2008q3/lib/gcc/arm-none-linux-gnueabi/4.3.2 /usr/arm-2008q3/lib/gcc /usr/arm-2008q3/arm-none-linux-gnueabi/lib /usr/arm-2008q3/arm-none-linux-gnueabi/libc/lib /usr/arm-2008q3/arm-none-linux-gnueabi/libc/usr/lib "
+sys_lib_search_path_spec="/home/felipe/thesis_dev_repo/buildroot-2011.08/output/host/opt/ext-toolchain/lib/gcc/arm-none-linux-gnueabi/4.5.1 /home/felipe/thesis_dev_repo/buildroot-2011.08/output/host/opt/ext-toolchain/lib/gcc /home/felipe/thesis_dev_repo/buildroot-2011.08/output/host/opt/ext-toolchain/arm-none-linux-gnueabi/lib /home/felipe/thesis_dev_repo/buildroot-2011.08/output/host/usr/arm-unknown-linux-gnueabi/sysroot/lib /home/felipe/thesis_dev_repo/buildroot-2011.08/output/host/usr/arm-unknown-linux-gnueabi/sysroot/usr/lib "
 
 # Run-time system search path for libraries.
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/lib/i386-linux-gnu/mesa /lib/i386-linux-gnu /usr/lib/i386-linux-gnu /lib/i686-linux-gnu /usr/lib/i686-linux-gnu /usr/local/lib "
+sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/lib/i386-linux-gnu/mesa /lib/i386-linux-gnu /usr/lib/i386-linux-gnu /lib/i686-linux-gnu /usr/lib/i686-linux-gnu /usr/local/lib /opt/qt5/lib /usr/lib/vmware-tools/lib32/libvmGuestLib.so /usr/lib/vmware-tools/lib64/libvmGuestLib.so /usr/lib/vmware-tools/lib32/libvmGuestLibJava.so /usr/lib/vmware-tools/lib64/libvmGuestLibJava.so /usr/lib/vmware-tools/lib32/libDeployPkg.so /usr/lib/vmware-tools/lib64/libDeployPkg.so /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/mesa /lib32 /usr/lib32 "
 
 # Whether dlopen is supported.
 dlopen_support=unknown
@@ -284,12 +284,12 @@ dlopen_self=unknown
 dlopen_self_static=unknown
 
 # Commands to strip libraries.
-old_striplib="arm-linux-strip --strip-debug"
-striplib="arm-linux-strip --strip-unneeded"
+old_striplib="arm-none-linux-gnueabi-strip --strip-debug"
+striplib="arm-none-linux-gnueabi-strip --strip-unneeded"
 
 
 # The linker used to build libraries.
-LD="/usr/arm-2008q3/arm-none-linux-gnueabi/bin/ld"
+LD="/home/felipe/thesis_dev_repo/buildroot-2011.08/output/host/opt/ext-toolchain/arm-none-linux-gnueabi/bin/ld"
 
 # How to create reloadable object files.
 reload_flag=" -r"
@@ -299,7 +299,7 @@ reload_cmds="\$LD\$reload_flag -o \$output\$reload_objs"
 old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 
 # A language specific compiler.
-CC="arm-linux-gcc -std=gnu99"
+CC="arm-none-linux-gnueabi-gcc -std=gnu99"
 
 # Is the compiler the GNU compiler?
 with_gcc=yes
